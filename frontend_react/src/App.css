@@ -91,3 +91,86 @@ main {
 a {
   color: var(--primary);
 }
+
+/* GitHub Diff Viewer Styles */
+.diff-view {
+  font-family: ui-monospace,SFMono-Regular,"SF Mono",Consolas,"Liberation Mono",Menlo,monospace;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.diff-gutter {
+  background-color: #f6f8fa;
+  color: #656d76;
+  text-align: right;
+  padding: 0 8px;
+  width: 40px;
+  user-select: none;
+  vertical-align: top;
+  border-right: 1px solid #d0d7de;
+}
+
+.diff-gutter-insert {
+  background-color: #ccfdf6 !important;
+  color: #116329 !important;
+}
+
+.diff-gutter-delete {
+  background-color: #ffd1d9 !important;
+  color: #82071e !important;
+}
+
+.diff-code {
+  padding: 0 8px;
+  vertical-align: top;
+  white-space: pre;
+  word-wrap: normal;
+}
+
+.diff-code-insert {
+  background-color: #dafbe1 !important;
+}
+
+.diff-code-delete {
+  background-color: #ffebe9 !important;
+}
+
+.diff-hunk-header {
+  background-color: #f6f8fa;
+  color: #656d76;
+  padding: 4px 8px;
+  font-family: ui-monospace,SFMono-Regular,"SF Mono",Consolas,"Liberation Mono",Menlo,monospace;
+  font-size: 12px;
+}
+
+/* Override react-diff-view default styles to match GitHub */
+.diff-widget-wrapper .diff-decoration-gutter {
+  background-color: #f6f8fa;
+}
+
+.diff-widget-wrapper .diff-line-normal .diff-gutter-normal {
+  background-color: #ffffff;
+  color: #656d76;
+}
+
+.diff-widget-wrapper .diff-line-insert .diff-gutter-insert {
+  background-color: #ccfdf6;
+  color: #116329;
+}
+
+.diff-widget-wrapper .diff-line-delete .diff-gutter-delete {
+  background-color: #ffd1d9;
+  color: #82071e;
+}
+
+.diff-widget-wrapper .diff-line-normal .diff-code-normal {
+  background-color: #ffffff;
+}
+
+.diff-widget-wrapper .diff-line-insert .diff-code-insert {
+  background-color: #dafbe1;
+}
+
+.diff-widget-wrapper .diff-line-delete .diff-code-delete {
+  background-color: #ffebe9;
+}

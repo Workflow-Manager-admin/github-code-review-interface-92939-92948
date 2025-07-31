@@ -55,7 +55,8 @@ const divide = (a, b) => {
   return a / b;
 };
 `,
-      diff: `@@ -1,12 +1,23 @@
+      diff: `@@ -1,12 +1,17 @@
+ // src/utils/math.js
 -var add = (a, b) => {
 -  return a + b;
 -}
@@ -67,6 +68,8 @@ const divide = (a, b) => {
 -var divide = (a, b) => {
 -  return a / b;
 -}
++// Improved by code review: replaced 'var' with 'const', added JSDoc comments
++
 +/**
 + * Adds two numbers.
 + */
@@ -84,8 +87,8 @@ const divide = (a, b) => {
 +  if (b === 0) throw new Error("Division by zero.");
 +  return a / b;
 +};
- // TODO: optimize math utils
-`
+ 
+ // TODO: optimize math utils`
     },
     {
       filename: "README.md",
@@ -115,24 +118,21 @@ npm install
 
 > Usage details coming soon.
 `,
-      diff: `@@ -3,8 +3,13 @@
--A sample repo.
--
+      diff: `@@ -1,8 +1,10 @@
+ # hello-world
+ 
+ A sample repo.
+ 
 -###Install
--
--npm install
--
--#Missing blank line
-+A sample repo.
-+
 +### Install
-+
+ 
+-npm install
 +\`\`\`bash
 +npm install
 +\`\`\`
-+
-+> Usage details coming soon.
-`
+ 
+-#Missing blank line
++> Usage details coming soon.`
     },
     {
       filename: "src/server.js",

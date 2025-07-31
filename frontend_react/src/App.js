@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import { MOCK_REVIEW_RESULT, mockApplyReviewedCode } from "./mockData";
+import { GitHubDiffViewer } from "./GitHubDiffViewer";
 
 // Component: Shows final summary of applied diffs and result of push (uses mock/sample data if in sample mode)
 function DiffSummaryPage({ appliedFiles, reviewResult, sampleMode, onBackToDashboard }) {
@@ -47,62 +48,13 @@ function DiffSummaryPage({ appliedFiles, reviewResult, sampleMode, onBackToDashb
         )}
         {files.map((f, idx) => (
           <div key={f.filename} style={{
-              border: "1.5px solid #e3eaf4",
-              borderRadius: 11,
-              boxShadow: "0 1.5px 17px 0 #e9edfa",
-              marginBottom: 32,
-              background: "#fafdff"
+              marginBottom: 32
           }}>
-            <div style={{
-              fontWeight: 600, fontSize: 17, color: "#24292e",
-              padding: "14px 22px 3px 22px"
-            }}>
-              <span style={{marginRight: 10, fontFamily: "monospace", fontSize: 16}}>📄</span>
-              {f.filename}
-            </div>
-            <div style={{display: "flex", flexWrap: "wrap", alignItems: "stretch", marginTop: 7, gap: 0}}>
-              <div style={{
-                flex: 1, minWidth: 260, 
-                background: "#f7fafd",
-                borderRight: "1.5px solid #ececec"
-              }}>
-                <div style={{fontSize: 15, fontWeight: 500, color: "#98926a", padding: "6px 15px"}}>
-                  Before
-                </div>
-                <pre style={{
-                  fontFamily: "Menlo, Monaco, monospace", fontSize: 13.1,
-                  margin: 0, padding: "11px 10px", background: "#f4f5f7", border: "none",
-                  minHeight: 90, maxHeight: 210, overflowX: "auto"
-                }}>{f.orig_code}</pre>
-              </div>
-              <div style={{
-                flex: 1, minWidth: 260, 
-                background: "#f1faec",
-                borderRight: "1.5px solid #ececec"
-              }}>
-                <div style={{fontSize: 15, fontWeight: 500, color: "#31703b", padding: "6px 15px"}}>
-                  After
-                </div>
-                <pre style={{
-                  fontFamily: "Menlo, Monaco, monospace", fontSize: 13.1,
-                  margin: 0, padding: "11px 10px", background: "#f8fbf7", border: "none",
-                  minHeight: 90, maxHeight: 210, overflowX: "auto"
-                }}>{f.reviewed_code}</pre>
-              </div>
-              <div style={{
-                flex: 1.2, minWidth: 290,
-                background: "#fffaf4"
-              }}>
-                <div style={{fontSize: 15, fontWeight: 500, color: "#c44811", padding: "6px 15px"}}>
-                  Diff
-                </div>
-                <pre style={{
-                  fontFamily: "Menlo, Monaco, monospace", fontSize: 13.1,
-                  margin: 0, padding: "11px 10px", background: "#fdf9f7", border: "none",
-                  minHeight: 90, maxHeight: 210, overflowX: "auto"
-                }}>{f.diff || "// No diff data."}</pre>
-              </div>
-            </div>
+            <GitHubDiffViewer 
+              filename={f.filename}
+              diffText={f.diff || "// No diff data available"}
+              viewType="unified"
+            />
           </div>
         ))}
       </div>
@@ -544,25 +496,13 @@ function FileCard({
         )}
 
         {tab === "Diff Preview" && diff && (
-          <pre
-            style={{
-              marginTop: 8,
-              background: "#f4f7fc",
-              color: "#193434",
-              fontSize: 13.5,
-              fontFamily: "Menlo, Monaco, monospace",
-              borderRadius: 7,
-              padding: "13px 9px",
-              lineHeight: 1.6,
-              overflowX: "auto",
-              minHeight: 70,
-              border: `1.5px solid #bed6fd`,
-              opacity: 0.97,
-              tabSize: 2,
-            }}
-          >
-            {diff}
-          </pre>
+          <div style={{ marginTop: 8 }}>
+            <GitHubDiffViewer 
+              filename={file} 
+              diffText={diff}
+              viewType="unified"
+            />
+          </div>
         )}
       </div>
     </div>
@@ -827,7 +767,6 @@ export default function App() {
           : fileObj?.reviewed_code;
       // Try real API. If fails, fallback to mock:
       let resp;
-      let gotSample = false;
       try {
         resp = await postJson("/apply-reviewed-code", {
           owner: repoInput?.owner || (reviewResult?.meta?.owner ?? "octocat"),
@@ -840,7 +779,6 @@ export default function App() {
       } catch (_err) {
         // fallback to mock
         resp = mockApplyReviewedCode(filename, reviewed_code);
-        gotSample = true;
         setSampleMode(true);
         setStepNotice(
           <MiniNotice type="warn">
