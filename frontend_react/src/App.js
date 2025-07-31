@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import { MOCK_REVIEW_RESULT, mockApplyReviewedCode } from "./mockData";
 
 /**
  * Modern, minimal GitHub Code Review UI
@@ -569,7 +570,6 @@ export default function App() {
         repo: input.repo,
         branch: input.branch,
       });
-      // Expected: { meta, files: [{ filename, issues, orig_code, reviewed_code, diff }] }
       setReviewResult(result);
       setStep(2);
       setStepNotice(
@@ -583,8 +583,15 @@ export default function App() {
         "Failed to review repo: " +
           (err.message || err.toString() || "unknown error")
       );
-      setStepNotice("");
-      setReviewResult(null);
+      setStepNotice(
+        <MiniNotice type="warn">
+          <span style={{ color: "#b77e24", fontWeight: 700, marginRight: 7 }}>Sample Data Mode:</span>
+          Backend unavailable.<br />
+          <span style={{ fontSize: 15 }}>The full interface below is populated with sample data for demo purposes.</span>
+        </MiniNotice>
+      );
+      setReviewResult(MOCK_REVIEW_RESULT);
+      setStep(2);
     }
     setReviewing(false);
   }
@@ -614,14 +621,27 @@ export default function App() {
         typeof editedReviewed[filename] === "string"
           ? editedReviewed[filename]
           : fileObj?.reviewed_code;
-      const resp = await postJson("/apply-reviewed-code", {
-        owner: repoInput.owner,
-        repo: repoInput.repo,
-        branch: repoInput.branch,
-        filename: filename,
-        reviewed_code,
-      });
-      // Expected: { ok: true, diff: "..." }
+      // Try real API. If fails, fallback to mock:
+      let resp;
+      try {
+        resp = await postJson("/apply-reviewed-code", {
+          owner: repoInput?.owner || (reviewResult?.meta?.owner ?? "octocat"),
+          repo: repoInput?.repo || (reviewResult?.meta?.repo ?? "hello-world"),
+          branch: repoInput?.branch || (reviewResult?.meta?.branch ?? "main"),
+          filename: filename,
+          reviewed_code,
+        });
+      } catch (_err) {
+        // fallback to mock
+        resp = mockApplyReviewedCode(filename, reviewed_code);
+        setStepNotice(
+          <MiniNotice type="warn">
+            <span style={{ color: "#b77e24", fontWeight: 700, marginRight: 7 }}>Sample Data Mode:</span>
+            Backend unavailable.<br />
+            <span style={{ fontSize: 15 }}>Actions below update the UI locally for demo.</span>
+          </MiniNotice>
+        )
+      }
       setApplyResults((prev) => ({
         ...prev,
         [filename]: { ok: !!resp.ok, error: resp.error },
