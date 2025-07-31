@@ -2,6 +2,114 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import { MOCK_REVIEW_RESULT, mockApplyReviewedCode } from "./mockData";
 
+// Component: Shows final summary of applied diffs and result of push (uses mock/sample data if in sample mode)
+function DiffSummaryPage({ appliedFiles, reviewResult, sampleMode, onBackToDashboard }) {
+  // Prepare file-level info
+  const files = (reviewResult && Array.isArray(reviewResult.files))
+    ? reviewResult.files.filter(f => appliedFiles.includes(f.filename))
+    : [];
+  return (
+    <section style={{ maxWidth: 1200, margin: "35px auto" }}>
+      <div style={{marginBottom: 28}}>
+        <h2 style={{color: "#0366d6", fontSize: 26, letterSpacing: 0.02, marginBottom: 8, marginTop: 0}}>
+          <span role="img" aria-label="push">&#128228;</span> Diff Summary: Applied Changes
+        </h2>
+        {sampleMode && (
+          <MiniNotice type="warn">
+            <b>Sample Data Mode:</b> No backend detected. This summary uses hardcoded diffs and local UI state.
+          </MiniNotice>
+        )}
+        <MiniNotice type="success">
+          All proposed changes pushed to repository! (Simulated{sampleMode ? " – sample mode" : ""})
+        </MiniNotice>
+        <button
+          style={{
+            background: "#0366d6",
+            color: "#fff",
+            border: "none",
+            borderRadius: 8,
+            padding: "11px 28px",
+            fontWeight: 600,
+            fontSize: 16.5,
+            marginTop: 9,
+            boxShadow: "0 0.5px 2px 0 #0366d630",
+            cursor: "pointer"
+          }}
+          onClick={onBackToDashboard}
+        >
+          &larr; Back to Dashboard
+        </button>
+      </div>
+
+      <div>
+        {files.length === 0 && (
+          <MiniNotice type="warn">No files were applied/changed.</MiniNotice>
+        )}
+        {files.map((f, idx) => (
+          <div key={f.filename} style={{
+              border: "1.5px solid #e3eaf4",
+              borderRadius: 11,
+              boxShadow: "0 1.5px 17px 0 #e9edfa",
+              marginBottom: 32,
+              background: "#fafdff"
+          }}>
+            <div style={{
+              fontWeight: 600, fontSize: 17, color: "#24292e",
+              padding: "14px 22px 3px 22px"
+            }}>
+              <span style={{marginRight: 10, fontFamily: "monospace", fontSize: 16}}>📄</span>
+              {f.filename}
+            </div>
+            <div style={{display: "flex", flexWrap: "wrap", alignItems: "stretch", marginTop: 7, gap: 0}}>
+              <div style={{
+                flex: 1, minWidth: 260, 
+                background: "#f7fafd",
+                borderRight: "1.5px solid #ececec"
+              }}>
+                <div style={{fontSize: 15, fontWeight: 500, color: "#98926a", padding: "6px 15px"}}>
+                  Before
+                </div>
+                <pre style={{
+                  fontFamily: "Menlo, Monaco, monospace", fontSize: 13.1,
+                  margin: 0, padding: "11px 10px", background: "#f4f5f7", border: "none",
+                  minHeight: 90, maxHeight: 210, overflowX: "auto"
+                }}>{f.orig_code}</pre>
+              </div>
+              <div style={{
+                flex: 1, minWidth: 260, 
+                background: "#f1faec",
+                borderRight: "1.5px solid #ececec"
+              }}>
+                <div style={{fontSize: 15, fontWeight: 500, color: "#31703b", padding: "6px 15px"}}>
+                  After
+                </div>
+                <pre style={{
+                  fontFamily: "Menlo, Monaco, monospace", fontSize: 13.1,
+                  margin: 0, padding: "11px 10px", background: "#f8fbf7", border: "none",
+                  minHeight: 90, maxHeight: 210, overflowX: "auto"
+                }}>{f.reviewed_code}</pre>
+              </div>
+              <div style={{
+                flex: 1.2, minWidth: 290,
+                background: "#fffaf4"
+              }}>
+                <div style={{fontSize: 15, fontWeight: 500, color: "#c44811", padding: "6px 15px"}}>
+                  Diff
+                </div>
+                <pre style={{
+                  fontFamily: "Menlo, Monaco, monospace", fontSize: 13.1,
+                  margin: 0, padding: "11px 10px", background: "#fdf9f7", border: "none",
+                  minHeight: 90, maxHeight: 210, overflowX: "auto"
+                }}>{f.diff || "// No diff data."}</pre>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /**
  * Modern, minimal GitHub Code Review UI
  * - Step 1: Repo input form
@@ -247,6 +355,8 @@ function FileCard({
   applyResult,
   diff,
   isApplying,
+  applied = false,
+  sampleMode = false,
 }) {
   // Tabs: "Issues", "Original", "Reviewed", "Diff Preview"
   const [tab, setTab] = useState("Issues");
@@ -256,24 +366,44 @@ function FileCard({
   tabs.push("Reviewed");
   if (diff) tabs.push("Diff Preview");
 
+  // Show applied tick if already applied
+  const appliedIndicator = applied
+    ? (
+      <span style={{
+        marginLeft: 14, background: "#e4fde2", color: "#299755",
+        fontWeight: 600, fontSize: 13, borderRadius: 8, padding: "2px 11px"
+      }}>Applied</span>
+    ) : null;
+
   return (
     <div
       style={{
         marginBottom: 32,
-        border: `1px solid #dbe4ee`,
+        border: applied
+          ? "2px solid #b0ebb7"
+          : `1px solid #dbe4ee`,
         borderRadius: 12,
-        background: "#fcfcff",
-        boxShadow: "0 2px 12px 0 #e8eefb3c",
+        background: applied ? "#f9fffa" : "#fcfcff",
+        boxShadow: applied
+            ? "0 2px 12px 0 #d6fae78a"
+            : "0 2px 12px 0 #e8eefb3c",
         padding: "0 0 22px 0",
         maxWidth: 950,
         marginLeft: "auto",
         marginRight: "auto",
-        transition: "box-shadow .16s",
+        transition: "box-shadow .16s, border .18s, background .18s"
       }}
       data-testid={`file-card-${file.replaceAll("/", "_")}`}
     >
       <div style={{ padding: "16px 28px 8px 28px", fontSize: 18, fontWeight: 500, color: COLORS.secondary }}>
         <span style={{ marginRight: 10, fontFamily: "monospace", fontSize: 15 }}>📄</span> {file}
+        {appliedIndicator}
+        {sampleMode && (
+          <span style={{
+            marginLeft: 13, background: "#fff7e2", color: "#b77e24",
+            fontWeight: 500, fontSize: 12.5, borderRadius: 7, padding: "2px 10px"
+          }}>sample mode</span>
+        )}
       </div>
       <div style={{ borderBottom: "1px solid #f2f5fa", marginBottom: 0, marginTop: 10, padding: "0 20px" }}>
         {tabs.map((t) => (
@@ -375,28 +505,35 @@ function FileCard({
               onChange={(e) => onEditReviewed(e.target.value)}
               spellCheck={false}
               aria-label="Reviewed code (editable)"
-              disabled={!!reviewing}
+              disabled={!!reviewing || applied}
               autoComplete="off"
             ></textarea>
             <button
               style={{
-                background: reviewing || isApplying ? "#c6e6cd" : COLORS.accent,
+                background: applied ? "#b6e6ce" :
+                  ((reviewing || isApplying) ? "#c6e6cd" : COLORS.accent),
                 color: "#fff",
                 border: "none",
                 borderRadius: 6,
                 padding: "9px 24px",
                 fontSize: 15.3,
                 fontWeight: 600,
-                cursor: reviewing || isApplying ? "wait" : "pointer",
+                cursor: applied
+                  ? "not-allowed"
+                  : ((reviewing || isApplying) ? "wait" : "pointer"),
                 boxShadow: "0 0.5px 1.5px 0 #28a74511",
                 letterSpacing: 0.01,
                 marginRight: 10,
+                opacity: applied ? 0.68 : 1,
+                transition: "background .17s, opacity .16s"
               }}
-              disabled={reviewing || isApplying}
+              disabled={reviewing || isApplying || applied}
               onClick={onApplyReviewed}
               data-testid={`apply-reviewed-btn-${file.replaceAll("/", "_")}`}
             >
-              {isApplying ? "Applying..." : "Apply Reviewed Code"}
+              {applied
+                ? "Applied"
+                : (isApplying ? "Applying..." : "Apply This Change")}
             </button>
             {applyResult && (
               <span style={{ marginLeft: 17, fontSize: 14.5, color: applyResult.ok ? COLORS.accent : "#b00" }}>
@@ -484,22 +621,78 @@ function RepoOverview({ meta }) {
   );
 }
 
-function Dashboard({ reviewResult, reviewing, onEditReviewedCode, onApplyReviewedCode, applyingFile, applyResults, stepNotice }) {
+function Dashboard({
+  reviewResult,
+  reviewing,
+  onEditReviewedCode,
+  onApplyReviewedCode,
+  applyingFile,
+  applyResults,
+  stepNotice,
+  appliedFiles = [],
+  sampleMode = false,
+  onApplyAllChanges,
+  allChangesApplied = false
+}) {
   // reviewResult structure
   // { meta: { owner, repo, branch, ...}, files: [ { filename, issues, orig_code, reviewed_code, diff } ] }
   if (!reviewResult) return null;
   const { meta, files } = reviewResult;
 
+  // Decide whether all files are applied
+  const allApplied = Array.isArray(files)
+    ? files.every(f => appliedFiles.includes(f.filename))
+    : false;
+
   return (
     <section style={{ maxWidth: 1100, margin: "0 auto" }}>
       <RepoOverview meta={meta} />
+      {sampleMode && (
+        <div style={{marginBottom: 5}}>
+        <MiniNotice type="warn">
+          <span style={{ color: "#b77e24", fontWeight: 700, marginRight: 7 }}>Sample Mode:</span>
+          No backend connection. Applying changes is simulated.<br />
+        </MiniNotice>
+        </div>
+      )}
       {stepNotice}
       {files.length === 0 ? (
         <MiniNotice type="warn">No files found in this repository.</MiniNotice>
       ) : (
         <>
-          <div style={{ fontSize: 20, fontWeight: 600, margin: "20px 0 18px 5px", color: COLORS.primary }}>
-            Files
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            margin: "20px 0 18px 5px"
+          }}>
+            <div style={{ fontSize: 20, fontWeight: 600, color: COLORS.primary }}>
+              Files
+            </div>
+            <button
+              style={{
+                background: allApplied ? "#b6e6ce" : "#0366d6",
+                color: "#fff",
+                border: "none",
+                borderRadius: 8,
+                padding: "11px 20px",
+                fontWeight: 600,
+                fontSize: 17,
+                letterSpacing: 0.08,
+                boxShadow: "0 0.5px 2px 0 #0366d630",
+                cursor: allApplied || reviewing ? "not-allowed" : "pointer",
+                opacity: allApplied ? 0.65 : 1,
+                marginRight: 2,
+                transition: "background .18s"
+              }}
+              disabled={allApplied || reviewing}
+              onClick={onApplyAllChanges}
+              data-testid="apply-all-changes"
+            >
+              {allApplied
+                ? "All Changes Applied"
+                : (allChangesApplied ? "Applying..." : "Apply All Changes")}
+            </button>
           </div>
           {files.map((f, idx) => (
             <FileCard
@@ -514,6 +707,8 @@ function Dashboard({ reviewResult, reviewing, onEditReviewedCode, onApplyReviewe
               applyResult={applyResults[f.filename]}
               diff={f.diff}
               isApplying={applyingFile === f.filename}
+              applied={appliedFiles.includes(f.filename)}
+              sampleMode={sampleMode}
             />
           ))}
         </>
@@ -545,7 +740,7 @@ async function postJson(url, body) {
  */
 export default function App() {
   // App state
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1); // 1: repo input, 2: dashboard, 3: diff-summary
   const [reviewing, setReviewing] = useState(false);
   const [reviewResult, setReviewResult] = useState(null); // shape: {meta, files: [...]}
   const [repoInput, setRepoInput] = useState(null);
@@ -554,6 +749,9 @@ export default function App() {
   const [applyingFile, setApplyingFile] = useState("");
   const [applyResults, setApplyResults] = useState({}); // { [filename]: { ok, error, ...} }
   const [stepNotice, setStepNotice] = useState("");
+  const [appliedFiles, setAppliedFiles] = useState([]); // which file(s) were applied/pushed
+  const [sampleMode, setSampleMode] = useState(false); // true if using fallback
+  const [allChangesApplied, setAllChangesApplied] = useState(false);
 
   // Start review: send POST to backend /review/start
   // PUBLIC_INTERFACE
@@ -563,6 +761,10 @@ export default function App() {
     setReviewResult(null);
     setStepNotice("Cloning repository and starting analysis. This may take a few moments...");
     setRepoInput(input);
+    setSampleMode(false);
+    setAppliedFiles([]);
+    setApplyResults({});
+    setAllChangesApplied(false);
 
     try {
       const result = await postJson("/review/start", {
@@ -578,6 +780,7 @@ export default function App() {
         </MiniNotice>
       );
       setError("");
+      setSampleMode(false);
     } catch (err) {
       setError(
         "Failed to review repo: " +
@@ -591,6 +794,7 @@ export default function App() {
         </MiniNotice>
       );
       setReviewResult(MOCK_REVIEW_RESULT);
+      setSampleMode(true);
       setStep(2);
     }
     setReviewing(false);
@@ -610,7 +814,7 @@ export default function App() {
     }));
   }
 
-  // Handler for "Apply Reviewed Code" button (per file)
+  // Handler for "Apply This Change" button (per file)
   // PUBLIC_INTERFACE
   async function handleApplyReviewedCode(filename) {
     setApplyingFile(filename);
@@ -623,6 +827,7 @@ export default function App() {
           : fileObj?.reviewed_code;
       // Try real API. If fails, fallback to mock:
       let resp;
+      let gotSample = false;
       try {
         resp = await postJson("/apply-reviewed-code", {
           owner: repoInput?.owner || (reviewResult?.meta?.owner ?? "octocat"),
@@ -631,9 +836,12 @@ export default function App() {
           filename: filename,
           reviewed_code,
         });
+        setSampleMode(false);
       } catch (_err) {
         // fallback to mock
         resp = mockApplyReviewedCode(filename, reviewed_code);
+        gotSample = true;
+        setSampleMode(true);
         setStepNotice(
           <MiniNotice type="warn">
             <span style={{ color: "#b77e24", fontWeight: 700, marginRight: 7 }}>Sample Data Mode:</span>
@@ -646,6 +854,7 @@ export default function App() {
         ...prev,
         [filename]: { ok: !!resp.ok, error: resp.error },
       }));
+      setAppliedFiles((prev) => prev.includes(filename) ? prev : [...prev, filename]);
       // Update diff in reviewResult.files
       setReviewResult((prev) => ({
         ...prev,
@@ -673,6 +882,25 @@ export default function App() {
     setApplyingFile("");
   }
 
+  // Handler for "Apply All Changes" button (dashboard)
+  async function handleApplyAllChanges() {
+    if (!reviewResult || !Array.isArray(reviewResult.files)) return;
+    setAllChangesApplied(false);
+    // For each file, simulate API or set sample mode for button
+    for (const f of reviewResult.files) {
+      // Only apply files not already applied
+      if (appliedFiles.includes(f.filename)) continue;
+      await handleApplyReviewedCode(f.filename);
+    }
+    setAllChangesApplied(true);
+    setTimeout(() => setStep(3), 550); // short visual delay for summary transition
+  }
+
+  function handleGoBackToDashboard() {
+    setStep(2);
+    setStepNotice("");
+  }
+
   // Light/minimal layout theme
   useEffect(() => {
     document.body.style.background = "#f5f7fa";
@@ -696,6 +924,18 @@ export default function App() {
             applyingFile={applyingFile}
             applyResults={applyResults}
             stepNotice={stepNotice}
+            appliedFiles={appliedFiles}
+            sampleMode={sampleMode}
+            onApplyAllChanges={handleApplyAllChanges}
+            allChangesApplied={allChangesApplied}
+          />
+        )}
+        {step === 3 && (
+          <DiffSummaryPage
+            appliedFiles={appliedFiles.length > 0 ? appliedFiles : (reviewResult ? reviewResult.files.map(f => f.filename) : [])}
+            reviewResult={reviewResult}
+            sampleMode={sampleMode}
+            onBackToDashboard={handleGoBackToDashboard}
           />
         )}
       </main>
