@@ -1,8 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renders repo input component', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(screen.getByText(/Start a Review/i)).toBeInTheDocument();
+});
+
+test('top nav appears', () => {
+  render(<App />);
+  expect(screen.getByTestId('topnav')).toBeInTheDocument();
 });
